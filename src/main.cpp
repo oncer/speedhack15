@@ -1,5 +1,6 @@
 #include "common.h"
 #include "plant.h"
+#include "char.h"
 
 ALLEGRO_DISPLAY *g_display;
 
@@ -11,16 +12,18 @@ int main(int argc, char **argv)
 	}
 	al_install_keyboard();
 	al_init_image_addon();
+	al_init_primitives_addon();
 
 	al_set_new_display_flags(ALLEGRO_OPENGL | ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
 	g_display = al_create_display(800, 480);
-	bool quit;
+	bool quit = false;
 	ALLEGRO_EVENT_QUEUE *queue;
 	queue = al_create_event_queue();
 	al_register_event_source(queue, al_get_keyboard_event_source());
 	al_register_event_source(queue, al_get_display_event_source(g_display));
 	ALLEGRO_EVENT event;
 	Plant plant;
+	Char player;
 	while (!quit)
 	{
 		while (al_get_next_event(queue, &event)) {
@@ -42,7 +45,10 @@ int main(int argc, char **argv)
 
 		al_clear_to_color(black);
 		plant.update();
+		player.update();
+
 		plant.draw();
+		player.draw();
 
 		al_flip_display();
 		al_rest(0.02);

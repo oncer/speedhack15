@@ -1,3 +1,4 @@
+#pragma once
 #include "common.h"
 
 class Plant
@@ -8,21 +9,37 @@ public:
 	void update();
 	void draw();
 
-	struct Leaf
+	struct Node
 	{
-		Leaf():exists(false){}
+		enum {
+			TYPE_STEM,
+			TYPE_LEAF,
+			TYPE_HEAD
+		};
+		Node();
 		bool exists;
+		bool drawn;
+		bool flip;
+		int type;
 		int age;
 		int health;
-		bool mirror;
+		float x, y;
+		float start_x, start_y;
+		float target_x, target_y;
+		float sine_multi;
+		float sine_offset;
+		int splits;
+		int leaf_splits;
+		float radius;
+		Node *parent;
 	};
 
 	int age;
 
 private:
-	ALLEGRO_BITMAP *im_leaf;
-	Leaf *leaves;
-	int leaves_count;
+	Node *create_node(int type, int x, int y, int target_x, int target_y);
+	Node *nodes;
+	int nodes_count;
 
 };
 

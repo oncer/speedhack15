@@ -41,6 +41,8 @@ void Plant::update()
 				n.radius += growth * (1.0 - n.radius / 10);
 			} else if (n.type == Node::TYPE_HEAD) {
 				n.radius += growth * (1.0 - n.radius / 30);
+			} else if (n.type == Node::TYPE_LEAF && !n.end) {
+				n.radius += growth * (1.0 - n.radius / 20);
 			}
 		}
 
@@ -83,6 +85,7 @@ void Plant::update()
 								n.target_x + (n.target_x - n.start_x), n.target_y + 30 + rng_random() * 20);
 						n1->parent = &n;
 						n1->splits = n.splits - 1;
+						n1->end = n1->splits <= 0;
 						n.splits = 0;
 					}
 					break;
@@ -96,25 +99,69 @@ void Plant::draw()
 	for (int i = 0; i < nodes_count; i++) {
 		nodes[i].drawn = false;
 	}
-	for (int i = 0; i < nodes_count; i++) {
-		Node& n = nodes[i];
-		int radius = n.radius + 1;
-		switch (n.type)
-		{
-			case Node::TYPE_STEM: 
-				al_draw_circle(n.x, n.y, radius, al_map_rgb(0, 255, 0), 0);
-				break;
-			case Node::TYPE_LEAF:
-				al_draw_circle(n.x, n.y, radius, al_map_rgb(100, 255, 100), 0);
-				break;
-			case Node::TYPE_HEAD:
-				al_draw_circle(n.x, n.y, radius, al_map_rgb(255, 255, 0), 0);
-				break;
+	for (int i = nodes_count; i >= 0; i--) {
+		Node* n0 = &nodes[i];
+		Node* n1 = n0->parent;
+		float n0_radius = n0->radius;
+		if (n1 && !n0->drawn) {
+			n0->drawn = true;
+			ALLEGRO_COLOR color;
+			switch (n0->type) {
+				case Node::TYPE_HEAD:
+				case Node::TYPE_STEM:
+					color = al_map_rgb(0, 255, 0); break;
+				case Node::TYPE_LEAF:
+					color = al_map_rgb(100, 255, 100); break;
+			}
+			ALLEGRO_COLOR node_color;
+			switch (n0->type) {
+				case Node::TYPE_HEAD:
+					node_color = al_map_rgb(255 - rng_random(20), 255 - rng_random(20), 0); break;
+					n0_radius = n1->radius;
+					break;
+				case Node::TYPE_STEM:
+					node_color = al_map_rgb(0, 255, 0); break;
+				case Node::TYPE_LEAF:
+					node_color = al_map_rgb(100, 255, 100); break;
+			}
+			draw_connection(n0->x, n0->y, n0_radius + 1,
+					n1->x, n1->y, n1->radius + 1, color);
+			al_draw_filled_circle(n0->x, n0->y, n0->radius, node_color);
+			al_draw_filled_circle(n1->x, n1->y, n1->radius, color);
 		}
 	}
 }
 
-Plant::Node *Plant::create_node(int type, int x, int y, int target_x, int target_y)
+void Plant::draw_connection(float x0, float y0, float radius0,
+		float x1, float y1, float radius1,
+		ALLEGRO_COLOR color)
+{
+	float dx = x1 - x0;
+	float dy = y1 - y0;
+	float len = std::sqrt(dx*dx + dy*dy);
+	float dxn = 0, dyn = 0;
+	if (len > 0) {
+		dxn = dx / len;
+		dyn = dy / len;
+	}
+	float norm0_x = -dyn;
+	float norm0_y = dxn;
+	float norm1_x = dyn;
+	float norm1_y = -dxn;
+
+	float p0_x = x0 + norm0_x * radius0;
+	float p0_y = y0 + norm0_y * radius0;
+	float p1_x = x1 + norm0_x * radius1;
+	float p1_y = y1 + norm0_y * radius1;
+	float p2_x = x1 + norm1_x * radius1;
+	float p2_y = y1 + norm1_y * radius1;
+	float p3_x = x0 + norm1_x * radius0;
+	float p3_y = y0 + norm1_y * radius0;
+	al_draw_filled_triangle(p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, color);
+	al_draw_filled_triangle(p0_x, p0_y, p2_x, p2_y, p3_x, p3_y, color);
+}
+
+Plant::Node *Plant::create_node(int type, float x, float y, float target_x, float target_y)
 {
 	if (nodes_count + 1 < MAX_NODES) {
 		Node* n = &nodes[nodes_count++];
@@ -138,9 +185,9 @@ Plant::Node *Plant::create_node(int type, int x, int y, int target_x, int target
 Plant::Node::Node():
 	exists(false), drawn(false),
 	flip(false),
+	end(false),
 	type(Node::TYPE_STEM),
 	age(0),
-	health(0),
 	x(0), y(0),
 	target_x(0), target_y(0),
 	sine_multi(0), sine_offset(0),

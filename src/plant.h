@@ -20,9 +20,9 @@ public:
 		bool exists;
 		bool drawn;
 		bool flip;
+		bool end;
 		int type;
 		int age;
-		int health;
 		float x, y;
 		float start_x, start_y;
 		float target_x, target_y;
@@ -37,7 +37,11 @@ public:
 	int age;
 
 private:
-	Node *create_node(int type, int x, int y, int target_x, int target_y);
+	void draw_connection(float x0, float y0, float radius0,
+			float x1, float y1, float radius1,
+			ALLEGRO_COLOR color);
+
+	Node *create_node(int type, float x, float y, float target_x, float target_y);
 	Node *nodes;
 	int nodes_count;
 

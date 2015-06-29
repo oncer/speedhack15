@@ -24,6 +24,7 @@ int main(int argc, char **argv)
 	ALLEGRO_EVENT event;
 	Plant plant;
 	Char player;
+	ALLEGRO_BITMAP *bg = al_load_bitmap("assets/bg.png");
 	while (!quit)
 	{
 		while (al_get_next_event(queue, &event)) {
@@ -47,6 +48,7 @@ int main(int argc, char **argv)
 		plant.update();
 		player.update();
 
+		al_draw_bitmap(bg, 0, 0, 0);
 		plant.draw();
 		player.draw();
 
